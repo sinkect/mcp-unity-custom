@@ -91,8 +91,8 @@ namespace McpUnity.Unity
             
             try
             {
-                // Create a new WebSocket server
-                _webSocketServer = new WebSocketServer($"ws://localhost:{McpUnitySettings.Instance.Port}");
+                // Bind to IPAddress.Any (0.0.0.0) so machines on the same network can connect
+                _webSocketServer = new WebSocketServer(McpUnitySettings.Instance.Port);
                 // Add the MCP service endpoint with a handler that references this server
                 _webSocketServer.AddWebSocketService("/McpUnity", () => new McpUnitySocketHandler(this));
                 

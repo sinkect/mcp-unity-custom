@@ -31,25 +31,30 @@ interface UnityResponse {
 export class McpUnity {
   private logger: Logger;
   private port: number;
+  private host: string;
   private ws: WebSocket | null = null;
   private pendingRequests: Map<string, PendingRequest> = new Map<string, PendingRequest>();
   private readonly REQUEST_TIMEOUT = 10000;
   private retryDelay = 1000;
-  
+
   constructor(logger: Logger) {
     this.logger = logger;
-    
+
     // Initialize port from environment variable or use default
-    const envRegistry = process.platform === 'win32' 
+    const envRegistry = process.platform === 'win32'
         ? this.getUnityPortFromWindowsRegistry()
         : this.getUnityPortFromUnixRegistry();
-    
+
     const envPort = process.env.UNITY_PORT || envRegistry;
     this.port = envPort ? parseInt(envPort, 10) : 8090;
-    
+
     this.logger.info(`Using port: ${this.port} for Unity WebSocket connection`);
+
+    const envHost = process.env.UNITY_HOST;
+    this.host = envHost && envHost.length > 0 ? envHost : 'localhost';
+    this.logger.info(`Using host: ${this.host} for Unity WebSocket connection`);
   }
-  
+
   /**
    * Start the Unity connection
    * @param clientName Optional name of the MCP client connecting to Unity
@@ -59,7 +64,7 @@ export class McpUnity {
       this.logger.info('Attempting to connect to Unity WebSocket...');
       await this.connect(clientName); // Pass client name to connect
       this.logger.info('Successfully connected to Unity WebSocket');
-      
+
       if (clientName) {
         this.logger.info(`Client identified to Unity as: ${clientName}`);
       }
@@ -70,10 +75,10 @@ export class McpUnity {
       // Disconnect to clean up for the next request attempt
       this.disconnect();
     }
-    
+
     return Promise.resolve();
   }
-  
+
   /**
    * Connect to the Unity WebSocket
    * @param clientName Optional name of the MCP client connecting to Unity
@@ -83,12 +88,12 @@ export class McpUnity {
       this.logger.debug('Already connected to Unity WebSocket');
       return Promise.resolve();
     }
-    
+
     // First, properly close any existing WebSocket connection
     this.disconnect();
     
     return new Promise<void>((resolve, reject) => {
-      const wsUrl = `ws://localhost:${this.port}/McpUnity`;
+      const wsUrl = `ws://${this.host}:${this.port}/McpUnity`;
       this.logger.debug(`Connecting to ${wsUrl}...`);
       
       // Create connection options with headers for client identification
