@@ -1,6 +1,9 @@
 using McpUnity.Utils;
 using UnityEngine;
 using UnityEditor;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace McpUnity.Unity
 {
@@ -22,6 +25,7 @@ namespace McpUnity.Unity
         private string _mcpConfigJson = "";
         private bool _tabsIndentationJson = false;
         private Vector2 _helpTabScrollPosition = Vector2.zero;
+        private string _localIp = "";
 
         [MenuItem("Tools/MCP Unity/Server Window", false, 1)]
         public static void ShowWindow()
@@ -81,6 +85,18 @@ namespace McpUnity.Unity
             statusStyle.normal.textColor = statusColor;
             
             EditorGUILayout.LabelField(statusText, statusStyle);
+            EditorGUILayout.EndHorizontal();
+            
+            // Local IP display
+            EditorGUILayout.BeginHorizontal();
+            if (string.IsNullOrEmpty(_localIp))
+                _localIp = GetLocalIPv4() ?? "-- not connected --";
+            EditorGUILayout.LabelField("Host IP:", GUILayout.Width(120));
+            EditorGUILayout.LabelField(_localIp);
+            if (GUILayout.Button("Refresh IP", GUILayout.Width(100)))
+            {
+                _localIp = GetLocalIPv4() ?? "-- not connected --";
+            }
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.Space();
@@ -549,6 +565,24 @@ namespace McpUnity.Unity
             };
             
             EditorGUILayout.LabelField(text, wrappedStyle, options);
+        }
+
+        /// <summary>
+        /// Returns the first active non‑loopback IPv4 address, or null if none.
+        /// </summary>
+        private static string GetLocalIPv4()
+        {
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up) continue;
+                foreach (var ua in nic.GetIPProperties().UnicastAddresses)
+                {
+                    if (ua.Address.AddressFamily == AddressFamily.InterNetwork &&
+                        !IPAddress.IsLoopback(ua.Address))
+                        return ua.Address.ToString();
+                }
+            }
+            return null;
         }
         
         #endregion
