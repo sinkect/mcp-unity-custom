@@ -50,7 +50,7 @@ export class McpUnity {
 
     this.logger.info(`Using port: ${this.port} for Unity WebSocket connection`);
 
-    const envHost = process.env.UNITY_HOST?.trim();
+    const envHost = process.env.UNITY_HOST?.trim() || 'localhost';
     if (!envHost) {
       throw new Error(
           'UNITY_HOST environment variable must be set; refusing to fallback to localhost'
