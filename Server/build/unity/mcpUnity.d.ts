@@ -7,6 +7,7 @@ interface UnityRequest {
 export declare class McpUnity {
     private logger;
     private port;
+    private host;
     private ws;
     private pendingRequests;
     private readonly REQUEST_TIMEOUT;

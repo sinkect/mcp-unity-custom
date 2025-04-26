@@ -6,6 +6,7 @@ import { default as winreg } from 'winreg';
 export class McpUnity {
     logger;
     port;
+    host;
     ws = null;
     pendingRequests = new Map();
     REQUEST_TIMEOUT = 10000;
@@ -19,6 +20,12 @@ export class McpUnity {
         const envPort = process.env.UNITY_PORT || envRegistry;
         this.port = envPort ? parseInt(envPort, 10) : 8090;
         this.logger.info(`Using port: ${this.port} for Unity WebSocket connection`);
+        const envHost = process.env.UNITY_HOST?.trim();
+        if (!envHost) {
+            throw new Error('UNITY_HOST environment variable must be set; refusing to fallback to localhost');
+        }
+        this.host = envHost;
+        this.logger.info(`Using host: ${this.host} for Unity WebSocket connection`);
     }
     /**
      * Start the Unity connection
@@ -53,7 +60,7 @@ export class McpUnity {
         // First, properly close any existing WebSocket connection
         this.disconnect();
         return new Promise((resolve, reject) => {
-            const wsUrl = `ws://localhost:${this.port}/McpUnity`;
+            const wsUrl = `ws://${this.host}:${this.port}/McpUnity`;
             this.logger.debug(`Connecting to ${wsUrl}...`);
             // Create connection options with headers for client identification
             const options = {

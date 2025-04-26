@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using McpUnity.Tools;
@@ -98,6 +99,16 @@ namespace McpUnity.Unity
                 
                 // Start the server
                 _webSocketServer.Start();
+                // Persist the host address so the Node MCP server can read it if needed
+                try
+                {
+                    var hostFile = Path.Combine(Application.dataPath, "../mcp_host.txt");
+                    File.WriteAllText(hostFile, McpUnitySettings.Instance.HostAddress);
+                }
+                catch (Exception e)
+                {
+                    McpLogger.LogWarning($"Could not write host file: {e.Message}");
+                }
                 
                 McpLogger.LogInfo($"WebSocket server started on port {McpUnitySettings.Instance.Port}");
             }
